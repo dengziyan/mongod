@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>table</title>
+    <script src="./js/jquery-3.0.0.min.js"></script>
+    <script type="text/javascript">
+        /*var users = [
+            {username:'liyifeng',age:32,gender:'male'},
+            {username:'dengziyan',age:22,gender:'female'},
+            {username:'liyifeng',age:32,gender:'male'}
+        ]*/
+
+        //显示数据
+        function showUsers(users) {
+            $('#userTable').html('');//重新显示之前先清空数据，以免重复
+            if(users==[]||users.length==0) {
+                $('#userTable').html('当前没有用户');
+            }else {
+                var $userTable= $('#userTable');
+                for (var i = 0; i < users.length; i++) {
+                    var $row = $("<tr></tr>");
+                    //列（生成一行的3个属性）
+                    var $td1 = $("<td></td>");
+                    $td1.html(users[i].username);
+                    var $td2 = $("<td></td>");
+                    $td2.html(users[i].age);
+                    var $td3 = $("<td></td>");
+                    $td3.html(users[i].gender);
+
+                    var $td4 = $("<td></td>");
+                    //两个按钮
+                    var $input1=$('<input type="button" value="del" class="del"/>' );
+                    var $input2=$('<input type="button" value="modify" class="modify"/>' );
+                    $td4.append($input1,$input2);//把按钮放进td4列
+                    $row.append($td1,$td2,$td3,$td4);//把4个属性（列）放进一行
+                    $userTable.append($row);//把一行放进表格
+                }//依次把行放入表格
+                addlisten();
+                addModifyListen();
+            }
+        }
+
+        //增加用户
+        function addUser() {
+            var username=$('#username').val();
+            var age=$('#age').val();
+            var gender=$('#gender').val();
+            $.post('/user',{username:username,age:age,gender:gender},function(data){
+                if(data.success){
+                    console.log('data:',data);
+                    //成功做重新显示
+                    showUsers(data.users);
+                    //清除原来的值，准备做下次输入
+                    $('#username').val('');
+                    $('#age').val('');
+                    $('#gender').val('male');
+                }else{
+                    alert(data.msg);
+                }
+            })
+        }
+
+        //删除用户
+        function deluser(username) {//根据用户名删除
+            if(username==undefined||username==''){
+                alert('用户名不能为空');
+            }else{
+                $.ajax({
+                    url:'/user/'+username,
+                    type:'delete',
+                    success:function(data){
+                        //成功返回用户信息
+                        if(data.success){
+                            showUsers(data.users);
+                        }else{
+                            //失败返回错误信息
+                            alert(data.msg);
+                        }
+                    }
+                })
+            }
+
+        }
+
+        $(function () {
+            //从后台获得users数据
+            $.get('/user',{},function(data){
+                var users = [];
+                if(data!=undefined&&data!=null){
+                    users = data.users;
+                }
+                showUsers(users);
+            })
+            $('#addrow').bind('click',function(){
+                addUser();
+            })
+        })
+
+        //动态添加click事件
+        function addlisten() {
+            $('.del').bind('click',function (){
+                var username=$(this).parent().parent().children('td').first().html();
+                deluser(username);
+            });
+        }
+
+        //更改用户信息
+        function addModifyListen() {
+            $('.modify').bind('click',function (){
+                var $tds=$(this).parent().parent().children('td');
+                //第一个参数
+                var value=$tds[0].innerHTML;
+                $tds[0].innerHTML='';
+                var $input=$('<input type="text" disabled="disabled" value=""/>');
+                $input.val(value);
+                $($tds[0]).append($input);
+                for(var i=1;i<$tds.length-1;i++){
+                    var value=$tds[i].innerHTML;
+                    $tds[i].innerHTML='';
+                    var $input=$('<input type="text" value=""/>');
+                    $input.val(value);
+                    $($tds[i]).append($input);
+                }
+                $(this).unbind();
+                $(this).val('save');
+                $(this).bind('click',function () {
+                    var $tds=$(this).parent().parent().children('td');
+                    var username=$($tds[0]).children('input').first().val();
+                    var age=$($tds[1]).children('input').first().val();
+                    var gender=$($tds[2]).children('input').first().val();
+
+                    //值的验证
+                    $.ajax({
+                        url:'/user',
+                        type:'put',
+                        data:{username:username,age:age,gender:gender},
+                        success:function(data){
+                            if(data.success){
+                                showUsers(data.users);
+                                $(this).val('modify');
+                            }else{
+                                alert(data.msg);
+                            }
+                        }
+                    })
+
+                })
+            });
+        }
+    </script>
+</head>
+<body>
+<table id="userTable" border="1px">
+
+</table>
+<hr />
+<form>
+    username:<input type="text" id="username" /><br/>
+    age:<input type="text" id="age" /><br/>
+    gender<input type="text" id="gender" placeholder="male" value="male"/><br/>
+    <input type="button" value="add" id="addrow" /><br/>
+</form>
+</body>
+</html>

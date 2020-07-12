@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>table</title>
+    <script src="./js/jquery-3.0.0.min.js"></script>
+    <script type="text/javascript">
+        var users = [
+            {username:'liyifeng',age:32,gender:'male'},
+            {username:'dengziyan',age:22,gender:'female'},
+            {username:'liyifeng',age:32,gender:'male'}
+        ]
+        function showUsers(users) {
+            $('#userTable').html('');
+            if(users==[]||users.length==0) {
+                $('#userTable').html('当前没有用户');
+            }else {
+                var $userTable= $('#userTable');
+                for (var i = 0; i < users.length; i++) {
+                    var $row = $("<tr></tr>");
+                    var $td1 = $("<td></td>");
+                    $td1.html(users[i].username);
+                    var $td2 = $("<td></td>");
+                    $td2.html(users[i].age);
+                    var $td3 = $("<td></td>");
+                    $td3.html(users[i].gender);
+                    var $td4 = $("<td></td>");
+                    var $input1=$('<input type="button" value="del" class="del"/>' );
+                    var $input2=$('<input type="button" value="modify" class="modify"/>' );
+                    $td4.append($input1,$input2);
+                    $row.append($td1,$td2,$td3,$td4);
+                    $userTable.append($row);
+                }
+                addlisten();
+                addModifyListen();
+            }
+        }
+        function adddUser() {
+            var username=$('#username').val();
+            var age=$('#age').val();
+            var gender=$('#gender').val();
+            // var $row = $("<tr></tr>");
+            // var $td1 = $("<td></td>");
+            // $td1.html(username);
+            // var $td2 = $("<td></td>");
+            // $td2.html(age);
+            // var $td3 = $("<td></td>");
+            // $td3.html(gender);
+            // $row.append($td1,$td2,$td3);
+            // $('#userTable').append($row);
+            users.push({username:username,age:age,gender:gender});
+            showUsers(users);
+        }
+        function deluser(username) {
+            var index=-1;
+            for(var i=0;i<users.length;i++){
+                if(username==users[i].username){
+                    index=i;
+                    break;
+                }
+            }
+            users.splice(i,1);
+            showUsers(users);
+        }
+        $(function () {
+            showUsers(users);
+            //添加监听事件
+            $('#addrow').click(function () {
+                addUser();
+            });
+            //addlisten();
+        })
+        //动态添加click事件
+        function addlisten() {
+            $('.del').bind('click',function (){
+                var username=$(this).parent().parent().children('td').first().html();
+                deluser(username);
+            });
+        }
+        function addModifyListen() {
+            $('.modify').bind('click',function (){
+                var $tds=$(this).parent().parent().children('td');
+                //第一个参数
+                var value=$tds[0].innerHTML;
+                $tds[0].innerHTML='';
+                var $input=$('<input type="text" disabled="disabled" value=""/>');
+                $input.val(value);
+                $($tds[0]).append($input);
+                for(var i=1;i<$tds.length-1;i++){
+                    var value=$tds[i].innerHTML;
+                    $tds[i].innerHTML='';
+                    var $input=$('<input type="text" value=""/>');
+                    $input.val(value);
+                    $($tds[i]).append($input);
+                }
+                $(this).unbind();
+                $(this).val('save');
+                $(this).bind('click',function () {
+                    var $tds=$(this).parent().parent().children('td');
+                    var username=$($tds[0]).children('input').first().val();
+                    var age=$($tds[1]).children('input').first().val();
+                    var gender=$($tds[2]).children('input').first().val();
+                    var index=-1;
+                    for(var i=0;i<users.length;i++){
+                        if(users[i].username==username){
+                            index=i;
+                            break;
+                        }
+                    }
+                    if(index!=-1) {
+                        users[index].username = username;
+                        users[index].age = age;
+                        users[index].gender = gender;
+                    }
+                    $(this).val('modify');
+                    showUsers(users);
+                })
+            });
+        }
+    </script>
+</head>
+<body>
+    <table id="userTable" border="1px">
+
+    </table>
+    <hr />
+    <form>
+        username:<input type="text" id="username" /><br/>
+        age:<input type="text" id="age" /><br/>
+        gender<input type="text" id="gender" placeholder="male" value="male"/><br/>
+        <input type="button" value="add" id="addrow" /><br/>
+    </form>
+</body>
+</html>
